@@ -41,6 +41,7 @@ jobs:
         working-directory: app
         run: |
           flutter create --platforms=android --org com.azadcoin --project-name azad_coin_app .
+          rm -f test/widget_test.dart
           sed -i 's/com.azadcoin.azad_coin_app/com.azadcoin.app/g' android/app/build.gradle.kts || true
           sed -i 's/com.example.azad_coin_app/com.azadcoin.app/g' android/app/build.gradle.kts || true
 
