@@ -1,0 +1,70 @@
+name: Build Azad Coin Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "AzadCoin-Mobile-App-Complete.zip"
+      - ".github/workflows/build-apk.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract Flutter project
+        run: |
+          mkdir app
+          unzip -q AzadCoin-Mobile-App-Complete.zip -d app
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate Android project
+        working-directory: app
+        run: |
+          flutter create --platforms=android --org com.azadcoin --project-name azad_coin_app .
+          sed -i 's/com.azadcoin.azad_coin_app/com.azadcoin.app/g' android/app/build.gradle.kts || true
+          sed -i 's/com.example.azad_coin_app/com.azadcoin.app/g' android/app/build.gradle.kts || true
+
+      - name: Install dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: app
+        run: flutter analyze
+
+      - name: Build release APK
+        working-directory: app
+        run: flutter build apk --release
+
+      - name: Build Play Store AAB
+        working-directory: app
+        run: flutter build appbundle --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Azad-Coin-APK
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Azad-Coin-AAB
+          path: app/build/app/outputs/bundle/release/app-release.aab
