@@ -7,6 +7,7 @@ on:
     paths:
       - "AzadCoin-Mobile-App-Complete.zip"
       - "AzadCoin-Firebase-Patch.zip.b64"
+      - "AzadCoin-Functional-Wallet-Patch-Paths.zip.b64"
       - ".github/workflows/build-apk.yml"
 
 jobs:
@@ -24,6 +25,8 @@ jobs:
           unzip -q AzadCoin-Mobile-App-Complete.zip -d app
           base64 -d AzadCoin-Firebase-Patch.zip.b64 > /tmp/azad-firebase-patch.zip
           unzip -qo /tmp/azad-firebase-patch.zip -d app
+          base64 -d AzadCoin-Functional-Wallet-Patch-Paths.zip.b64 > /tmp/azad-functional-patch.zip
+          unzip -qo /tmp/azad-functional-patch.zip -d app
           sed -i 's/intl: ^0.19.0/intl: ^0.20.3/' app/pubspec.yaml
           sed -i 's/cardTheme: CardTheme(/cardTheme: CardThemeData(/' app/lib/theme/app_theme.dart
           rm -f app/test/widget_test.dart
@@ -47,7 +50,7 @@ jobs:
           rm -f test/widget_test.dart
           sed -i 's/com.azadcoin.azad_coin_app/com.azadcoin/g' android/app/build.gradle.kts
           sed -i 's/com.example.azad_coin_app/com.azadcoin/g' android/app/build.gradle.kts
-          find android/app/src/main/kotlin -name MainActivity.kt -exec sed -i 's/^package .*/package com.azadcoin/' {} \;
+          find android/app/src/main/kotlin -name MainActivity.kt -exec sed -i 's/^package .*/package com.azadcoin/; s/import io.flutter.embedding.android.FlutterActivity/import io.flutter.embedding.android.FlutterFragmentActivity/; s/FlutterActivity/FlutterFragmentActivity/' {} \;
           cp google-services.json android/app/google-services.json
           sed -i '/<application/i\    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' android/app/src/main/AndroidManifest.xml
           sed -i 's/android:label="azad_coin_app"/android:label="Azad Coin"/' android/app/src/main/AndroidManifest.xml
@@ -77,11 +80,11 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Azad-Coin-APK-Firebase-Push
+          name: Azad-Coin-APK-Full-Functions
           path: app/build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: Azad-Coin-AAB-Firebase-Push
+          name: Azad-Coin-AAB-Full-Functions
           path: app/build/app/outputs/bundle/release/app-release.aab
