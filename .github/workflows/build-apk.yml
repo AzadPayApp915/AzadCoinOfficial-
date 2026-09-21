@@ -4,82 +4,6 @@ on:
   push:
     branches: [main]
     paths:
-      - "AzadCoin-Functional-Wallet-Patch-Paths-v3.zip.b64"
-      - ".github/workflows/build-apk.yml"
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - name: Prepare original Azad Coin app with complete web UI
-        run: |
-          mkdir app
-          stable_commit=2ad1f1ee1c0be631dfab2436912760a265a107a8
-          source_base=https://raw.githubusercontent.com/AzadPayApp915/AzadCoinOfficial-/$stable_commit
-          curl -fsSL "$source_base/AzadCoin-Mobile-App-Complete.zip" -o /tmp/base.zip
-          unzip -q /tmp/base.zip -d app
-          curl -fsSL "$source_base/AzadCoin-Firebase-Patch.zip.b64" -o /tmp/firebase.b64
-          base64 -d /tmp/firebase.b64 > /tmp/firebase.zip
-          unzip -qo /tmp/firebase.zip -d app
-          base64 -d AzadCoin-Functional-Wallet-Patch-Paths-v3.zip.b64 > /tmp/ui.zip
-          unzip -qo /tmp/ui.zip -d app
-          base64 -d AzadCoin-Debit-Card-Patch-v2.zip.b64 > /tmp/card.zip
-          unzip -qo /tmp/card.zip -d app
-          python3 - <<'PY'
-          path = "app/lib/screens/dashboard_screen.dart"
-          text = open(path, encoding="utf-8").read()
-          old = "width: 1.15))))),"
-          new = "width: 1.15)))))),"
-          assert old in text
-          open(path, "w", encoding="utf-8").write(text.replace(old, new, 1))
-          PY
-          sed -i 's/intl: ^0.19.0/intl: ^0.20.3/' app/pubspec.yaml
-          sed -i 's/cardTheme: CardTheme(/cardTheme: CardThemeData(/' app/lib/theme/app_theme.dart
-          rm -f app/test/widget_test.dart
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - name: Configure Azad Coin Android app
-        working-directory: app
-        run: |
-          flutter create --platforms=android --org com.azadcoin --project-name azad_coin_app .
-          rm -f test/widget_test.dart
-          sed -i 's/com.azadcoin.azad_coin_app/com.azadcoin/g; s/com.example.azad_coin_app/com.azadcoin/g' android/app/build.gradle.kts
-          find android/app/src/main/kotlin -name MainActivity.kt -exec sed -i 's/^package .*/package com.azadcoin/; s/import io.flutter.embedding.android.FlutterActivity/import io.flutter.embedding.android.FlutterFragmentActivity/; s/FlutterActivity/FlutterFragmentActivity/' {} \;
-          cp google-services.json android/app/google-services.json
-          sed -i '/<application/i\    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' android/app/src/main/AndroidManifest.xml
-          sed -i 's/android:label="azad_coin_app"/android:label="Azad Coin"/' android/app/src/main/AndroidManifest.xml
-          sed -i '/id("com.android.application") version/a\    id("com.google.gms.google-services") version "4.4.2" apply false' android/settings.gradle.kts
-          sed -i '/id("com.android.application")/a\    id("com.google.gms.google-services")' android/app/build.gradle.kts
-          printf '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n' >> android/app/build.gradle.kts
-      - name: Build APK and AAB
-        working-directory: app
-        run: |
-          flutter pub get
-          flutter build apk --release
-          flutter build appbundle --release
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Azad-Coin-APK-Web-UI
-          path: app/build/app/outputs/flutter-apk/app-release.apk
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Azad-Coin-AAB-Web-UI
-          path: app/build/app/outputs/bundle/release/app-release.aab
-name: Build Azad Coin Android APK
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
       - "AzadCoin-Debit-Card-Patch-v2.zip.b64"
       - ".github/workflows/build-apk.yml"
 
@@ -138,14 +62,14 @@ jobs:
           rm -f test/widget_test.dart
           sed -i 's/com.azadcoin.azad_coin_app/com.azadcoin/g' android/app/build.gradle.kts
           sed -i 's/com.example.azad_coin_app/com.azadcoin/g' android/app/build.gradle.kts
-          find android/app/src/main/kotlin -name MainActivity.kt -exec sed -i 's/^package .*/package com.azadcoin/; s/import io.flutter.embedding.android.FlutterActivity/import io.flutter.embedding.android.FlutterFragmentActivity/; s/FlutterActivity/FlutterFragmentActivity/' {} \;
+          find android/app/src/main/kotlin -name MainActivity.kt -exec sed -i 's/^package .*/package com.azadcoin/; s/import io.flutter.embedding.android.FlutterActivity/import io.flutter.embedding.android.FlutterFragmentActivity/; s/FlutterActivity/FlutterFragmentActivity/' {} \\;
           cp google-services.json android/app/google-services.json
-          sed -i '/<application/i\    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/i\\ <uses-permission android:name="android.permission.INTERNET"/>\\n <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' android/app/src/main/AndroidManifest.xml
           sed -i 's/android:label="azad_coin_app"/android:label="Azad Coin"/' android/app/src/main/AndroidManifest.xml
-          sed -i '/id("com.android.application") version/a\    id("com.google.gms.google-services") version "4.4.2" apply false' android/settings.gradle.kts
-          sed -i '/id("com.android.application")/a\    id("com.google.gms.google-services")' android/app/build.gradle.kts
-          sed -i '/^android {/a\    compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n        sourceCompatibility = JavaVersion.VERSION_1_8\n        targetCompatibility = JavaVersion.VERSION_1_8\n    }' android/app/build.gradle.kts
-          printf '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n' >> android/app/build.gradle.kts
+          sed -i '/id("com.android.application") version/a\\ id("com.google.gms.google-services") version "4.4.2" apply false' android/settings.gradle.kts
+          sed -i '/id("com.android.application")/a\\ id("com.google.gms.google-services")' android/app/build.gradle.kts
+          sed -i '/^android {/a\\ compileOptions {\\n isCoreLibraryDesugaringEnabled = true\\n sourceCompatibility = JavaVersion.VERSION_1_8\\n targetCompatibility = JavaVersion.VERSION_1_8\\n }' android/app/build.gradle.kts
+          printf '\\ndependencies {\\n coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\\n}\\n' >> android/app/build.gradle.kts
 
       - name: Build original app with debit card update
         working-directory: app
