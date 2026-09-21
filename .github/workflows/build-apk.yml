@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "AzadCoin-Debit-Card-Patch-v2.zip.b64"
+      - "AzadCoin-Debit-Card-Patch-v3.zip.b64"
       - ".github/workflows/build-apk.yml"
 
 jobs:
