@@ -31,6 +31,71 @@ jobs:
           unzip -qo /tmp/functional.zip -d app
           base64 -d AzadCoin-Debit-Card-Patch-v2.zip.b64 > /tmp/debit-card.zip
           unzip -qo /tmp/debit-card.zip -d app
+
+          python3 - <<'PY'
+          path = "app/lib/screens/dashboard_screen.dart"
+          text = open(path, encoding="utf-8").read()
+          imports = """import 'transactions_screen.dart';
+import 'swap_screen.dart';
+import 'wallet_screen.dart';
+import 'financial_screens.dart';
+import 'program_screens.dart';
+import 'package:url_launcher/url_launcher.dart';
+"""
+          assert "import 'transactions_screen.dart';" in text
+          text = text.replace("import 'transactions_screen.dart';\n", imports, 1)
+          old_actions = """          Row(children: [
+            Expanded(child: _quick(Icons.savings_rounded, 'Islamic Staking', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StakingScreen())))),
+            const SizedBox(width: 10),
+            Expanded(child: _quick(Icons.receipt_long_rounded, 'Transactions', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())))),
+          ]),"""
+          new_actions = """          GridView.count(
+            crossAxisCount: 3,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: .86,
+            children: [
+              _quick(Icons.sensors_rounded, 'Live', () => _openOfficialRoute('/live')),
+              _quick(Icons.swap_vert_rounded, 'Convert', () => _open(const SwapScreen())),
+              _quick(Icons.send_rounded, 'Send AZAD', () => _open(const WalletScreen())),
+              _quick(Icons.south_west_rounded, 'Deposit', () => _open(const DepositScreen())),
+              _quick(Icons.diamond_outlined, 'Staking', () => _open(const StakingScreen())),
+              _quick(Icons.north_east_rounded, 'Withdraw', () => _open(const WithdrawScreen())),
+              _quick(Icons.card_giftcard_rounded, 'Gift', () => _open(const GiftScreen())),
+              _quick(Icons.menu_book_rounded, 'Read Pockets', () => _openOfficialRoute('/read-pockets')),
+              _quick(Icons.confirmation_num_outlined, 'Lottery', () => _openOfficialRoute('/lottery')),
+              _quick(Icons.construction_rounded, 'Mining', () => _open(const MiningScreen())),
+              _quick(Icons.groups_rounded, 'Referral', () => _open(const ReferralScreen())),
+              _quick(Icons.workspace_premium_rounded, 'Ambassador', () => _open(const AmbassadorScreen())),
+              _quick(Icons.emoji_events_outlined, 'Leaderboard', () => _open(const LeaderboardScreen())),
+              _quick(Icons.account_balance_wallet_outlined, 'AFN Wallet', () => _open(const AfnWalletScreen())),
+              _quick(Icons.description_outlined, 'Whitepaper', () => _open(const WhitepaperScreen())),
+              _quick(Icons.bar_chart_rounded, 'Withdrawal Stats', () => _open(const WithdrawalStatsScreen())),
+              _quick(Icons.wallet_rounded, 'Wallet', () => _open(const WalletScreen())),
+              _quick(Icons.receipt_long_rounded, 'Transactions', () => _open(const TransactionsScreen())),
+              _quick(Icons.credit_card_rounded, 'AZAD VISA Card', () => _open(const AzadVisaCardScreen())),
+            ],
+          ),"""
+          assert old_actions in text, "Dashboard action section was not found"
+          text = text.replace(old_actions, new_actions, 1)
+          marker = "  double _number(dynamic value) => value is num ? value.toDouble() : double.tryParse('\$value') ?? 0;\n"
+          helpers = """  void _open(Widget page) => Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  Future<void> _openOfficialRoute(String route) async {
+    final uri = Uri.https('azad-coin.com', route);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the official Azad Coin page.')),
+      );
+    }
+  }
+
+"""
+          assert marker in text, "Dashboard helper marker was not found"
+          text = text.replace(marker, helpers + marker, 1)
+          open(path, "w", encoding="utf-8").write(text)
+          PY
           python3 - <<'PY'
           path = "app/lib/screens/dashboard_screen.dart"
           text = open(path, encoding="utf-8").read()
