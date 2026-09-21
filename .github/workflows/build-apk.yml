@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "AzadCoin-Debit-Card-Patch-v3.zip.b64"
+      - "AzadCoin-Debit-Card-Patch-v2.zip.b64"
       - ".github/workflows/build-apk.yml"
 
 jobs:
@@ -64,11 +64,10 @@ jobs:
           sed -i '/^android {/a\ compileOptions {\n isCoreLibraryDesugaringEnabled = true\n sourceCompatibility = JavaVersion.VERSION_1_8\n targetCompatibility = JavaVersion.VERSION_1_8\n }' android/app/build.gradle.kts
           printf '\ndependencies {\n coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n' >> android/app/build.gradle.kts
 
-      - name: Build original app with App Icon and debit card
+      - name: Build original app with debit card
         working-directory: app
         run: |
           flutter pub get
-          dart run flutter_launcher_icons
           flutter build apk --release
           flutter build appbundle --release
 
