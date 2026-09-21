@@ -40,7 +40,7 @@ class ServicesScreen extends StatelessWidget {
           padding: const EdgeInsets.all(14), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(width: 54, height: 54, decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFFFF6DF), border: Border.all(color: const Color(0xFFF1D38B))), child: Icon(items[i].$1, color: AppColors.gold, size: 29)), const SizedBox(height: 12),
             Text(items[i].$2, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700)),
-          ])))), childCount: items.length),
+          ]))), childCount: items.length),
         ),
       ),
     ]));
