@@ -1,4 +1,5 @@
 name: Build Azad Coin Android APK
+
 on:
   workflow_dispatch:
   push:
@@ -6,7 +7,6 @@ on:
     paths:
       - "AzadCoin-Debit-Card-Patch-v2.zip.b64"
       - ".github/workflows/build-apk.yml"
-
 
 jobs:
   build:
@@ -17,8 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-
-      - name: Prepare verified stable Azad Coin source
+      - name: Prepare verified Azad Coin source
         run: |
           mkdir app
           stable_commit=2ad1f1ee1c0be631dfab2436912760a265a107a8
@@ -33,15 +32,6 @@ jobs:
           unzip -qo /tmp/functional.zip -d app
           base64 -d AzadCoin-Debit-Card-Patch-v2.zip.b64 > /tmp/debit-card.zip
           unzip -qo /tmp/debit-card.zip -d app
-          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnBhdGggPSBQYXRoKCJhcHAvbGliL3NjcmVlbnMvZGFzaGJvYXJkX3NjcmVlbi5kYXJ0IikKdGV4dCA9IHBhdGgucmVhZF90ZXh0KGVuY29kaW5nPSJ1dGYtOCIpCnRleHQgPSB0ZXh0LnJlcGxhY2UoImltcG9ydCAndHJhbnNhY3Rpb25zX3NjcmVlbi5kYXJ0JztcbiIsICJpbXBvcnQgJ3RyYW5zYWN0aW9uc19zY3JlZW4uZGFydCc7XG5pbXBvcnQgJ3BhY2thZ2U6dXJsX2xhdW5jaGVyL3VybF9sYXVuY2hlci5kYXJ0JztcbiIsIDEpCm9sZCA9ICIiIiAgICAgICAgICBSb3coY2hpbGRyZW46IFsKICAgICAgICAgICAgRXhwYW5kZWQoY2hpbGQ6IF9xdWljayhJY29ucy5zYXZpbmdzX3JvdW5kZWQsICdJc2xhbWljIFN0YWtpbmcnLCAoKSA9PiBOYXZpZ2F0b3IucHVzaChjb250ZXh0LCBNYXRlcmlhbFBhZ2VSb3V0ZShidWlsZGVyOiAoXykgPT4gY29uc3QgU3Rha2luZ1NjcmVlbigpKSkpKSwKICAgICAgICAgICAgY29uc3QgU2l6ZWRCb3god2lkdGg6IDEwKSwKICAgICAgICAgICAgRXhwYW5kZWQoY2hpbGQ6IF9xdWljayhJY29ucy5yZWNlaXB0X2xvbmdfcm91bmRlZCwgJ1RyYW5zYWN0aW9ucycsICgpID0+IE5hdmlnYXRvci5wdXNoKGNvbnRleHQsIE1hdGVyaWFsUGFnZVJvdXRlKGJ1aWxkZXI6IChfKSA9PiBjb25zdCBUcmFuc2FjdGlvbnNTY3JlZW4oKSkpKSksCiAgICAgICAgICBdKSwiIiIKbmV3ID0gIiIiICAgICAgICAgIEdyaWRWaWV3LmNvdW50KAogICAgICAgICAgICBjcm9zc0F4aXNDb3VudDogMiwKICAgICAgICAgICAgc2hyaW5rV3JhcDogdHJ1ZSwKICAgICAgICAgICAgcGh5c2ljczogY29uc3QgTmV2ZXJTY3JvbGxhYmxlU2Nyb2xsUGh5c2ljcygpLAogICAgICAgICAgICBtYWluQXhpc1NwYWNpbmc6IDEwLAogICAgICAgICAgICBjcm9zc0F4aXNTcGFjaW5nOiAxMCwKICAgICAgICAgICAgY2hpbGRBc3BlY3RSYXRpbzogMS4zNSwKICAgICAgICAgICAgY2hpbGRyZW46IFsKICAgICAgICAgICAgICBfcXVpY2soSWNvbnMud2lmaV90ZXRoZXJpbmdfcm91bmRlZCwgJ0xpdmUnLCAoKSA9PiBfb3BlbldlYignL2xpdmUnKSksCiAgICAgICAgICAgICAgX3F1aWNrKEljb25zLnN3YXBfdmVydF9yb3VuZGVkLCAnQ29udmVydCcsICgpID0+IF9vcGVuV2ViKCcvdHJhZGluZycpKSwKICAgICAgICAgICAgICBfcXVpY2soSWNvbnMuc2VuZF9yb3VuZGVkLCAnU2VuZCBBWkFEJywgKCkgPT4gX29wZW5XZWIoJy93YWxsZXQnKSksCiAgICAgICAgICAgICAgX3F1aWNrKEljb25zLmRvd25sb2FkX3JvdW5kZWQsICdEZXBvc2l0JywgKCkgPT4gX29wZW5XZWIoJy93YWxsZXQnKSksCiAgICAgICAgICAgICAgX3F1aWNrKEljb25zLnNhdmluZ3Nfcm91bmRlZCwgJ0lzbGFtaWMgU3Rha2luZycsICgpID0+IE5hdmlnYXRvci5wdXNoKGNvbnRleHQsIE1hdGVyaWFsUGFnZVJvdXRlKGJ1aWxkZXI6IChfKSA9PiBjb25zdCBTdGFraW5nU2NyZWVuKCkpKSksCiAgICAgICAgICAgICAgX3F1aWNrKEljb25zLm5vcnRoX2Vhc3Rfcm91bmRlZCwgJ1dpdGhkcmF3JywgKCkgPT4gX29wZW5XZWIoJy93aXRoZHJhdycpKSwKICAgICAgICAgICAgICBfcXVpY2soSWNvbnMuY2FyZF9naWZ0Y2FyZF9yb3VuZGVkLCAnR2lmdCcsICgpID0+IF9vcGVuV2ViKCcvZ2lmdC1jb2RlJykpLAogICAgICAgICAgICAgIF9xdWljayhJY29ucy5tZW51X2Jvb2tfcm91bmRlZCwgJ1JlYWQgUG9ja2V0cycsICgpID0+IF9vcGVuV2ViKCcvcmVhZC1wb2NrZXRzJykpLAogICAgICAgICAgICAgIF9xdWljayhJY29ucy5jb25maXJtYXRpb25fbnVtX291dGxpbmVkLCAnTG90dGVyeScsICgpID0+IF9vcGVuV2ViKCcvbG90dGVyeScpKSwKICAgICAgICAgICAgICBfcXVpY2soSWNvbnMuZ3JvdXBzX3JvdW5kZWQsICdSZWZlcnJhbCcsICgpID0+IF9vcGVuV2ViKCcvcmVmZXJyYWwnKSksCiAgICAgICAgICAgICAgX3F1aWNrKEljb25zLndvcmtzcGFjZV9wcmVtaXVtX3JvdW5kZWQsICdBbWJhc3NhZG9yJywgKCkgPT4gX29wZW5XZWIoJy9hbWJhc3NhZG9yJykpLAogICAgICAgICAgICAgIF9xdWljayhJY29ucy5lbW9qaV9ldmVudHNfb3V0bGluZWQsICdMZWFkZXJib2FyZCcsICgpID0+IF9vcGVuV2ViKCcvbGVhZGVyYm9hcmQnKSksCiAgICAgICAgICAgICAgX3F1aWNrKEljb25zLmFjY291bnRfYmFsYW5jZV93YWxsZXRfb3V0bGluZWQsICdBRk4gV2FsbGV0JywgKCkgPT4gX29wZW5XZWIoJy9hZm4td2FsbGV0JykpLAogICAgICAgICAgICAgIF9xdWljayhJY29ucy5kZXNjcmlwdGlvbl9vdXRsaW5lZCwgJ1doaXRlcGFwZXInLCAoKSA9PiBfb3BlbldlYignL3doaXRlcGFwZXInKSksCiAgICAgICAgICAgICAgX3F1aWNrKEljb25zLmJhcl9jaGFydF9yb3VuZGVkLCAnV2l0aGRyYXdhbCBTdGF0cycsICgpID0+IF9vcGVuV2ViKCcvd2l0aGRyYXdhbC1zdGF0cycpKSwKICAgICAgICAgICAgICBfcXVpY2soSWNvbnMucmVjZWlwdF9sb25nX3JvdW5kZWQsICdUcmFuc2FjdGlvbnMnLCAoKSA9PiBOYXZpZ2F0b3IucHVzaChjb250ZXh0LCBNYXRlcmlhbFBhZ2VSb3V0ZShidWlsZGVyOiAoXykgPT4gY29uc3QgVHJhbnNhY3Rpb25zU2NyZWVuKCkpKSksCiAgICAgICAgICAgICAgX3F1aWNrKEljb25zLnBlcnNvbl9yb3VuZGVkLCAnUHJvZmlsZScsICgpID0+IF9vcGVuV2ViKCcvcHJvZmlsZScpKSwKICAgICAgICAgICAgICBfcXVpY2soSWNvbnMuY2FtcGFpZ25fcm91bmRlZCwgJ0dpZ2FQdWIgQWRzJywgKCkgPT4gX29wZW5XZWIoJy9naWdhcHViLWFkcycpKSwKICAgICAgICAgICAgXSwKICAgICAgICAgICksIiIiCmlmIG9sZCBub3QgaW4gdGV4dDoKICAgIHJhaXNlIFN5c3RlbUV4aXQoIkRhc2hib2FyZCBhY3Rpb24gbGF5b3V0IHdhcyBub3QgZm91bmQiKQp0ZXh0ID0gdGV4dC5yZXBsYWNlKG9sZCwgbmV3LCAxKQptYXJrZXIgPSAiICBkb3VibGUgX251bWJlcihkeW5hbWljIHZhbHVlKSA9PiB2YWx1ZSBpcyBudW0gPyB2YWx1ZS50b0RvdWJsZSgpIDogZG91YmxlLnRyeVBhcnNlKCckdmFsdWUnKSA/PyAwO1xuIgpoZWxwZXJzID0gIiIiICBGdXR1cmU8dm9pZD4gX29wZW5XZWIoU3RyaW5nIHJvdXRlKSBhc3luYyB7CiAgICBmaW5hbCB1cmkgPSBVcmkuaHR0cHMoJ2F6YWQtY29pbi5jb20nLCByb3V0ZSk7CiAgICBpZiAoIWF3YWl0IGxhdW5jaFVybCh1cmksIG1vZGU6IExhdW5jaE1vZGUuZXh0ZXJuYWxBcHBsaWNhdGlvbikgJiYgbW91bnRlZCkgewogICAgICBTY2FmZm9sZE1lc3Nlbmdlci5vZihjb250ZXh0KS5zaG93U25hY2tCYXIoY29uc3QgU25hY2tCYXIoY29udGVudDogVGV4dCgnQ291bGQgbm90IG9wZW4gQXphZCBDb2luJykpKTsKICAgIH0KICB9CgoiIiIKaWYgbWFya2VyIG5vdCBpbiB0ZXh0OgogICAgcmFpc2UgU3lzdGVtRXhpdCgiRGFzaGJvYXJkIGhlbHBlciBtYXJrZXIgd2FzIG5vdCBmb3VuZCIpCnRleHQgPSB0ZXh0LnJlcGxhY2UobWFya2VyLCBoZWxwZXJzICsgbWFya2VyLCAxKQpwYXRoLndyaXRlX3RleHQodGV4dCwgZW5jb2Rpbmc9InV0Zi04Iik=' | base64 -d | python3
-          python3 - <<'PY'
-          path = "app/lib/screens/dashboard_screen.dart"
-          text = open(path, encoding="utf-8").read()
-          old = "width: 1.15))))),"
-          new = "width: 1.15)))))),"
-          assert old in text, "Expected debit-card pattern was not found"
-          open(path, "w", encoding="utf-8").write(text.replace(old, new, 1))
-          PY
           sed -i 's/intl: ^0.19.0/intl: ^0.20.3/' app/pubspec.yaml
           sed -i 's/cardTheme: CardTheme(/cardTheme: CardThemeData(/' app/lib/theme/app_theme.dart
           rm -f app/test/widget_test.dart
@@ -52,15 +42,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
-
-      - name: Configure original Android application
+      - name: Configure Azad Coin Android application
         working-directory: app
         run: |
           flutter create --platforms=android --org com.azadcoin --project-name azad_coin_app .
@@ -76,10 +64,11 @@ jobs:
           sed -i '/^android {/a\ compileOptions {\n isCoreLibraryDesugaringEnabled = true\n sourceCompatibility = JavaVersion.VERSION_1_8\n targetCompatibility = JavaVersion.VERSION_1_8\n }' android/app/build.gradle.kts
           printf '\ndependencies {\n coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n' >> android/app/build.gradle.kts
 
-      - name: Build original app with debit card update
+      - name: Build original app with App Icon and debit card
         working-directory: app
         run: |
           flutter pub get
+          dart run flutter_launcher_icons
           flutter build apk --release
           flutter build appbundle --release
 
@@ -89,7 +78,6 @@ jobs:
           name: Azad-Coin-APK-Debit-Card-Update
           path: app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
-
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
