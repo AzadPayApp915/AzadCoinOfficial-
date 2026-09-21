@@ -36,6 +36,9 @@ jobs:
         run: |
           rm -rf android
           flutter create --platforms=android --project-name azad_coin_app .
+          sed -i 's/ndkVersion = flutter.ndkVersion/ndkVersion = "27.0.12077973"/' android/app/build.gradle.kts
+          sed -i '/compileOptions {/a\        isCoreLibraryDesugaringEnabled = true' android/app/build.gradle.kts
+          printf '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n' >> android/app/build.gradle.kts
       - name: Build release APK
         working-directory: app
         run: |
