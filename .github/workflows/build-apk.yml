@@ -11,8 +11,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,16 +24,27 @@ jobs:
           mkdir app
           stable_commit=2ad1f1ee1c0be631dfab2436912760a265a107a8
           source_base=https://raw.githubusercontent.com/AzadPayApp915/AzadCoinOfficial-/$stable_commit
-          curl -fsSL "$source_base/AzadCoin-Mobile-App-Complete.zip" -o /tmp/azad-base.zip
+
+          curl --retry 3 --retry-delay 5 -fsSL \
+            "$source_base/AzadCoin-Mobile-App-Complete.zip" \
+            -o /tmp/azad-base.zip
           unzip -q /tmp/azad-base.zip -d app
-          curl -fsSL "$source_base/AzadCoin-Firebase-Patch.zip.b64" -o /tmp/firebase.b64
+
+          curl --retry 3 --retry-delay 5 -fsSL \
+            "$source_base/AzadCoin-Firebase-Patch.zip.b64" \
+            -o /tmp/firebase.b64
           base64 -d /tmp/firebase.b64 > /tmp/firebase.zip
           unzip -qo /tmp/firebase.zip -d app
-          curl -fsSL "$source_base/AzadCoin-Functional-Wallet-Patch-Paths.zip.b64" -o /tmp/functional.b64
+
+          curl --retry 3 --retry-delay 5 -fsSL \
+            "$source_base/AzadCoin-Functional-Wallet-Patch-Paths.zip.b64" \
+            -o /tmp/functional.b64
           base64 -d /tmp/functional.b64 > /tmp/functional.zip
           unzip -qo /tmp/functional.zip -d app
+
           base64 -d AzadCoin-Debit-Card-Patch-v2.zip.b64 > /tmp/debit-card.zip
           unzip -qo /tmp/debit-card.zip -d app
+
           sed -i 's/intl: ^0.19.0/intl: ^0.20.3/' app/pubspec.yaml
           sed -i 's/cardTheme: CardTheme(/cardTheme: CardThemeData(/' app/lib/theme/app_theme.dart
           rm -f app/test/widget_test.dart
@@ -41,6 +54,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: gradle
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -53,23 +67,73 @@ jobs:
         run: |
           flutter create --platforms=android --org com.azadcoin --project-name azad_coin_app .
           rm -f test/widget_test.dart
+
           sed -i 's/com.azadcoin.azad_coin_app/com.azadcoin/g' android/app/build.gradle.kts
           sed -i 's/com.example.azad_coin_app/com.azadcoin/g' android/app/build.gradle.kts
-          find android/app/src/main/kotlin -name MainActivity.kt -exec sed -i 's/^package .*/package com.azadcoin/; s/import io.flutter.embedding.android.FlutterActivity/import io.flutter.embedding.android.FlutterFragmentActivity/; s/FlutterActivity/FlutterFragmentActivity/' {} \;
-          cp google-services.json android/app/google-services.json
-          sed -i '/<application/i\ <uses-permission android:name="android.permission.INTERNET"/>\n <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' android/app/src/main/AndroidManifest.xml
-          sed -i 's/android:label="azad_coin_app"/android:label="Azad Coin"/' android/app/src/main/AndroidManifest.xml
-          sed -i '/id("com.android.application") version/a\ id("com.google.gms.google-services") version "4.4.2" apply false' android/settings.gradle.kts
-          sed -i '/id("com.android.application")/a\ id("com.google.gms.google-services")' android/app/build.gradle.kts
-          sed -i '/^android {/a\ compileOptions {\n isCoreLibraryDesugaringEnabled = true\n sourceCompatibility = JavaVersion.VERSION_1_8\n targetCompatibility = JavaVersion.VERSION_1_8\n }' android/app/build.gradle.kts
-          printf '\ndependencies {\n coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n' >> android/app/build.gradle.kts
 
-      - name: Build original app with debit card
+          find android/app/src/main/kotlin -name MainActivity.kt -exec sed -i \
+            's/^package .*/package com.azadcoin/; s/import io.flutter.embedding.android.FlutterActivity/import io.flutter.embedding.android.FlutterFragmentActivity/; s/FlutterActivity/FlutterFragmentActivity/' {} \;
+
+          cp google-services.json android/app/google-services.json
+
+          sed -i '/<application/i\
+          <uses-permission android:name="android.permission.INTERNET"/>\
+          <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' \
+          android/app/src/main/AndroidManifest.xml
+
+          sed -i 's/android:label="azad_coin_app"/android:label="Azad Coin"/' \
+            android/app/src/main/AndroidManifest.xml
+
+          sed -i '/id("com.android.application") version/a\
+              id("com.google.gms.google-services") version "4.4.2" apply false' \
+              android/settings.gradle.kts
+
+          sed -i '/id("com.android.application")/a\
+              id("com.google.gms.google-services")' \
+              android/app/build.gradle.kts
+
+          sed -i '/^android {/a\
+              compileOptions {\
+                  isCoreLibraryDesugaringEnabled = true\
+                  sourceCompatibility = JavaVersion.VERSION_1_8\
+                  targetCompatibility = JavaVersion.VERSION_1_8\
+              }' \
+              android/app/build.gradle.kts
+
+          printf '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n' \
+            >> android/app/build.gradle.kts
+
+      - name: Get Flutter packages
         working-directory: app
+        run: flutter pub get
+
+      - name: Build APK with retry
+        working-directory: app
+        env:
+          GRADLE_OPTS: -Dorg.gradle.internal.http.connectionTimeout=120000 -Dorg.gradle.internal.http.socketTimeout=120000
         run: |
-          flutter pub get
-          flutter build apk --release
-          flutter build appbundle --release
+          for attempt in 1 2 3; do
+            echo "APK build attempt $attempt of 3"
+            flutter build apk --release && break
+            if [ "$attempt" = 3 ]; then
+              exit 1
+            fi
+            sleep 20
+          done
+
+      - name: Build AAB with retry
+        working-directory: app
+        env:
+          GRADLE_OPTS: -Dorg.gradle.internal.http.connectionTimeout=120000 -Dorg.gradle.internal.http.socketTimeout=120000
+        run: |
+          for attempt in 1 2 3; do
+            echo "AAB build attempt $attempt of 3"
+            flutter build appbundle --release && break
+            if [ "$attempt" = 3 ]; then
+              exit 1
+            fi
+            sleep 20
+          done
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
