@@ -80,7 +80,14 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          flutter build apk --release
+          set +e
+          flutter build apk --release 2>&1 | tee /tmp/azad-build.log
+          status=${PIPESTATUS[0]}
+          if [ $status -ne 0 ]; then
+            details=$(tail -n 80 /tmp/azad-build.log | tr '\n' ' ' | sed 's/::/%3A%3A/g')
+            echo "::error title=Azad Coin Flutter build::$details"
+            exit $status
+          fi
           flutter build appbundle --release
 
       - name: Upload APK
