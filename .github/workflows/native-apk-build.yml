@@ -36,6 +36,12 @@ jobs:
         run: |
           rm -rf android
           flutter create --platforms=android --project-name azad_coin_app .
+          mkdir -p android/app/src/main/kotlin/com/azadcoin
+          mv android/app/src/main/kotlin/com/example/azad_coin_app/MainActivity.kt android/app/src/main/kotlin/com/azadcoin/MainActivity.kt
+          sed -i 's/package com.example.azad_coin_app/package com.azadcoin/' android/app/src/main/kotlin/com/azadcoin/MainActivity.kt
+          sed -i 's/namespace = "com.example.azad_coin_app"/namespace = "com.azadcoin"/' android/app/build.gradle.kts
+          sed -i 's/applicationId = "com.example.azad_coin_app"/applicationId = "com.azadcoin"/' android/app/build.gradle.kts
+          sed -i 's/android:label="azad_coin_app"/android:label="Azad Coin"/' android/app/src/main/AndroidManifest.xml
           sed -i 's/ndkVersion = flutter.ndkVersion/ndkVersion = "27.0.12077973"/' android/app/build.gradle.kts
           sed -i '/compileOptions {/a\        isCoreLibraryDesugaringEnabled = true' android/app/build.gradle.kts
           printf '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n' >> android/app/build.gradle.kts
@@ -46,6 +52,6 @@ jobs:
           flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: Azad-Coin-APK-Full-Functions
+          name: Azad-Coin-com.azadcoin-APK
           path: app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
