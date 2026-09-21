@@ -7,7 +7,8 @@ on:
     paths:
       - "AzadCoin-Mobile-App-Complete.zip"
       - "AzadCoin-Firebase-Patch.zip.b64"
-      - "AzadCoin-Functional-Wallet-Patch-Paths.zip.b64"
+      - "AzadCoin-Functional-Wallet-Patch-Paths-v3.zip.b64"
+      - "services_screen.fixed.dart"
       - ".github/workflows/build-apk.yml"
 
 jobs:
@@ -18,72 +19,55 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Extract Firebase-enabled Flutter project
+      - name: Prepare Flutter source
         run: |
           mkdir app
           unzip -q AzadCoin-Mobile-App-Complete.zip -d app
-          base64 -d AzadCoin-Firebase-Patch.zip.b64 > /tmp/azad-firebase-patch.zip
-          unzip -qo /tmp/azad-firebase-patch.zip -d app
-          base64 -d AzadCoin-Functional-Wallet-Patch-Paths.zip.b64 > /tmp/azad-functional-patch.zip
-          unzip -qo /tmp/azad-functional-patch.zip -d app
-          sed -i 's/intl: ^0.19.0/intl: ^0.20.3/' app/pubspec.yaml
+          base64 -d AzadCoin-Firebase-Patch.zip.b64 > /tmp/firebase.zip
+          unzip -qo /tmp/firebase.zip -d app
+          base64 -d AzadCoin-Functional-Wallet-Patch-Paths-v3.zip.b64 > /tmp/functional.zip
+          unzip -qo /tmp/functional.zip -d app
+          cp services_screen.fixed.dart app/lib/screens/services_screen.dart
+          sed -i 's/intl: ^0.20.3/intl: ^0.19.0/' app/pubspec.yaml
           sed -i 's/cardTheme: CardTheme(/cardTheme: CardThemeData(/' app/lib/theme/app_theme.dart
           rm -f app/test/widget_test.dart
-
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.29.2"
           channel: stable
           cache: true
-
-      - name: Generate Firebase Android project
+      - name: Configure native Android app
         working-directory: app
         run: |
-          flutter create --platforms=android --org com.azadcoin --project-name azad_coin_app .
-          rm -f test/widget_test.dart
-          sed -i 's/com.azadcoin.azad_coin_app/com.azadcoin/g' android/app/build.gradle.kts
-          sed -i 's/com.example.azad_coin_app/com.azadcoin/g' android/app/build.gradle.kts
-          find android/app/src/main/kotlin -name MainActivity.kt -exec sed -i 's/^package .*/package com.azadcoin/; s/import io.flutter.embedding.android.FlutterActivity/import io.flutter.embedding.android.FlutterFragmentActivity/; s/FlutterActivity/FlutterFragmentActivity/' {} \;
-          cp google-services.json android/app/google-services.json
-          sed -i '/<application/i\    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>' android/app/src/main/AndroidManifest.xml
+          rm -rf android
+          flutter create --platforms=android --project-name azad_coin_app .
+          mkdir -p android/app/src/main/kotlin/com/azadcoin
+          mv android/app/src/main/kotlin/com/example/azad_coin_app/MainActivity.kt android/app/src/main/kotlin/com/azadcoin/MainActivity.kt
+          sed -i 's/package com.example.azad_coin_app/package com.azadcoin/' android/app/src/main/kotlin/com/azadcoin/MainActivity.kt
+          sed -i 's/namespace = "com.example.azad_coin_app"/namespace = "com.azadcoin"/' android/app/build.gradle.kts
+          sed -i 's/applicationId = "com.example.azad_coin_app"/applicationId = "com.azadcoin"/' android/app/build.gradle.kts
           sed -i 's/android:label="azad_coin_app"/android:label="Azad Coin"/' android/app/src/main/AndroidManifest.xml
-          sed -i '/id("com.android.application") version/a\    id("com.google.gms.google-services") version "4.4.2" apply false' android/settings.gradle.kts
-          sed -i '/id("com.android.application")/a\    id("com.google.gms.google-services")' android/app/build.gradle.kts
-          sed -i '/^android {/a\    compileOptions {\n        isCoreLibraryDesugaringEnabled = true\n        sourceCompatibility = JavaVersion.VERSION_1_8\n        targetCompatibility = JavaVersion.VERSION_1_8\n    }' android/app/build.gradle.kts
-          printf '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n}\n' >> android/app/build.gradle.kts
-
-      - name: Install dependencies
+          sed -i 's/ndkVersion = flutter.ndkVersion/ndkVersion = "27.0.12077973"/' android/app/build.gradle.kts
+          sed -i '/compileOptions {/a\        isCoreLibraryDesugaringEnabled = true' android/app/build.gradle.kts
+          printf '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")\n}\n' >> android/app/build.gradle.kts
+      - name: Build release files
         working-directory: app
         run: |
           flutter pub get
-          dart run flutter_launcher_icons
-
-      - name: Analyze
-        working-directory: app
-        run: flutter analyze --no-fatal-infos || true
-
-      - name: Build release APK
-        working-directory: app
-        run: flutter build apk --release
-
-      - name: Build Play Store AAB
-        working-directory: app
-        run: flutter build appbundle --release
-
+          flutter build apk --release
+          flutter build appbundle --release
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Azad-Coin-APK-Full-Functions
           path: app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
-
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
