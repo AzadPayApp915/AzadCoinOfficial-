@@ -7,7 +7,7 @@ on:
     paths:
       - "AzadCoin-Mobile-App-Complete.zip"
       - "AzadCoin-Firebase-Patch.zip.b64"
-      - "AzadCoin-Functional-Wallet-Patch-Paths.zip.b64"
+      - "AzadCoin-Functional-Wallet-Patch-Paths-v3.zip.b64"
       - ".github/workflows/build-apk.yml"
 
 jobs:
@@ -25,7 +25,8 @@ jobs:
           unzip -q AzadCoin-Mobile-App-Complete.zip -d app
           base64 -d AzadCoin-Firebase-Patch.zip.b64 > /tmp/azad-firebase-patch.zip
           unzip -qo /tmp/azad-firebase-patch.zip -d app
-          base64 -d AzadCoin-Functional-Wallet-Patch-Paths.zip.b64 > /tmp/azad-functional-patch.zip
+          base64 -d AzadCoin-Functional-Wallet-Patch-Paths-v3.zip.b64 > /tmp/azad-functional-patch.zip
+          unzip -t /tmp/azad-functional-patch.zip
           unzip -qo /tmp/azad-functional-patch.zip -d app
           sed -i 's/intl: ^0.19.0/intl: ^0.20.3/' app/pubspec.yaml
           sed -i 's/cardTheme: CardTheme(/cardTheme: CardThemeData(/' app/lib/theme/app_theme.dart
