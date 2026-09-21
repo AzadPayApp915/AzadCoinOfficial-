@@ -68,7 +68,6 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          dart run flutter_launcher_icons
           flutter build apk --release
           flutter build appbundle --release
 
