@@ -32,6 +32,14 @@ jobs:
           unzip -qo /tmp/functional.zip -d app
           base64 -d AzadCoin-Debit-Card-Patch-v2.zip.b64 > /tmp/debit-card.zip
           unzip -qo /tmp/debit-card.zip -d app
+          python3 - <<'PY'
+          path = "app/lib/screens/dashboard_screen.dart"
+          text = open(path, encoding="utf-8").read()
+          old = "width: 1.15))))),"
+          new = "width: 1.15)))))),"
+          assert old in text, "Expected debit-card pattern was not found"
+          open(path, "w", encoding="utf-8").write(text.replace(old, new, 1))
+          PY
           sed -i 's/intl: ^0.19.0/intl: ^0.20.3/' app/pubspec.yaml
           sed -i 's/cardTheme: CardTheme(/cardTheme: CardThemeData(/' app/lib/theme/app_theme.dart
           rm -f app/test/widget_test.dart
